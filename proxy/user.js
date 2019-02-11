@@ -108,8 +108,11 @@ exports.newAndSave = function (name, loginname, pass, email, avatar_url, active,
   user.save(callback);
 };
 
-var makeGravatar = function (email) {
-  return 'http://www.gravatar.com/avatar/' + utility.md5(email.toLowerCase()) + '?size=48';
+// var makeGravatar = function (email) {
+//   return 'http://www.gravatar.com/avatar/' + utility.md5(email.toLowerCase()) + '?size=48';
+// };
+var makeGravatar = function () {
+  return '/public/avatars/' + Math.floor(Math.random() * 100) + '.png';
 };
 exports.makeGravatar = makeGravatar;
 

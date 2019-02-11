@@ -15,7 +15,7 @@ exports.showSignup = function (req, res) {
 
 exports.signup = function (req, res, next) {
   var loginname = validator.trim(req.body.loginname).toLowerCase();
-  var email     = validator.trim(req.body.email).toLowerCase();
+  // var email     = validator.trim(req.body.email).toLowerCase();
   var pass      = validator.trim(req.body.pass);
   var rePass    = validator.trim(req.body.re_pass);
 
@@ -23,11 +23,16 @@ exports.signup = function (req, res, next) {
   ep.fail(next);
   ep.on('prop_err', function (msg) {
     res.status(422);
-    res.render('sign/signup', {error: msg, loginname: loginname, email: email});
+    // res.render('sign/signup', {error: msg, loginname: loginname, email: email});
+    res.render('sign/signup', {error: msg, loginname: loginname});
   });
 
   // 验证信息的正确性
-  if ([loginname, pass, rePass, email].some(function (item) { return item === ''; })) {
+  // if ([loginname, pass, rePass, email].some(function (item) { return item === ''; })) {
+  //   ep.emit('prop_err', '信息不完整。');
+  //   return;
+  // }
+  if ([loginname, pass, rePass].some(function (item) { return item === ''; })) {
     ep.emit('prop_err', '信息不完整。');
     return;
   }
@@ -38,9 +43,9 @@ exports.signup = function (req, res, next) {
   if (!tools.validateId(loginname)) {
     return ep.emit('prop_err', '用户名不合法。');
   }
-  if (!validator.isEmail(email)) {
-    return ep.emit('prop_err', '邮箱不合法。');
-  }
+  // if (!validator.isEmail(email)) {
+  //   return ep.emit('prop_err', '邮箱不合法。');
+  // }
   if (pass !== rePass) {
     return ep.emit('prop_err', '两次密码输入不一致。');
   }
@@ -49,28 +54,30 @@ exports.signup = function (req, res, next) {
 
   User.getUsersByQuery({'$or': [
     {'loginname': loginname},
-    {'email': email}
+    // {'email': email}
   ]}, {}, function (err, users) {
     if (err) {
       return next(err);
     }
     if (users.length > 0) {
-      ep.emit('prop_err', '用户名或邮箱已被使用。');
+      // ep.emit('prop_err', '用户名或邮箱已被使用。');
+      ep.emit('prop_err', '用户名已被使用。');
       return;
     }
 
     tools.bhash(pass, ep.done(function (passhash) {
       // create gravatar
-      var avatarUrl = User.makeGravatar(email);
-      User.newAndSave(loginname, loginname, passhash, email, avatarUrl, false, function (err) {
+      var avatarUrl = User.makeGravatar(loginname);
+      User.newAndSave(loginname, loginname, passhash, null, avatarUrl, false, function (err) {
         if (err) {
           return next(err);
         }
         // 发送激活邮件
-        mail.sendActiveMail(email, utility.md5(email + passhash + config.session_secret), loginname);
-        res.render('sign/signup', {
-          success: '欢迎加入 ' + config.name + '！我们已给您的注册邮箱发送了一封邮件，请点击里面的链接来激活您的帐号。'
-        });
+        // mail.sendActiveMail(email, utility.md5(email + passhash + config.session_secret), loginname);
+        // res.render('sign/signup', {
+        //   success: '欢迎加入 ' + config.name + '！我们已给您的注册邮箱发送了一封邮件，请点击里面的链接来激活您的帐号。'
+        // });
+        res.redirect(mail.getActiveMailLink(null, utility.md5(passhash + config.session_secret), loginname));
       });
 
     }));
@@ -144,9 +151,10 @@ exports.login = function (req, res, next) {
       }
       if (!user.active) {
         // 重新发送激活邮件
-        mail.sendActiveMail(user.email, utility.md5(user.email + passhash + config.session_secret), user.loginname);
-        res.status(403);
-        return res.render('sign/signin', { error: '此帐号还没有被激活，激活链接已发送到 ' + user.email + ' 邮箱，请查收。' });
+        // mail.sendActiveMail(user.email, utility.md5(user.email + passhash + config.session_secret), user.loginname);
+        // res.status(403);
+        // return res.render('sign/signin', { error: '此帐号还没有被激活，激活链接已发送到 ' + user.email + ' 邮箱，请查收。' });
+        return res.redirect(mail.getActiveMailLink(null, utility.md5(passhash + config.session_secret), loginname));
       }
       // store session cookie
       authMiddleWare.gen_session(user, res);
@@ -182,7 +190,7 @@ exports.activeAccount = function (req, res, next) {
       return next(new Error('[ACTIVE_ACCOUNT] no such user: ' + name));
     }
     var passhash = user.pass;
-    if (!user || utility.md5(user.email + passhash + config.session_secret) !== key) {
+    if (!user || utility.md5(passhash + config.session_secret) !== key) {
       return res.render('notify/notify', {error: '信息有误，帐号无法被激活。'});
     }
     if (user.active) {

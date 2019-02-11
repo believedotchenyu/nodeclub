@@ -4,7 +4,8 @@ var config        = require('../config');
 var util          = require('util');
 var logger = require('./logger');
 var transporter     = mailer.createTransport(smtpTransport(config.mail_opts));
-var SITE_ROOT_URL = 'http://' + config.host;
+// var SITE_ROOT_URL = 'http://' + config.host;
+var SITE_ROOT_URL = 'http://localhost';
 var async = require('async')
 
 /**
@@ -58,6 +59,10 @@ exports.sendActiveMail = function (who, token, name) {
     html: html
   });
 };
+
+exports.getActiveMailLink = function (who, token, name) {
+  return '/active_account?key=' + token + '&name=' + name;
+}
 
 /**
  * 发送密码重置通知邮件

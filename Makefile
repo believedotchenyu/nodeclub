@@ -53,9 +53,9 @@ run:
 	@node app.js
 
 start: install build
-	@NODE_ENV=production ./node_modules/.bin/pm2 start app.js -i 0 --name "cnode" --max-memory-restart 400M
+	@NODE_ENV=production ./node_modules/.bin/pm2 start app.js -i 0 --name "nsbbs" --max-memory-restart 400M
 
 restart: install build
-	@NODE_ENV=production ./node_modules/.bin/pm2 restart "cnode"
+	@NODE_ENV=production ./node_modules/.bin/pm2 restart "nsbbs"
 
 .PHONY: install test testfile cov test-cov build run start restart

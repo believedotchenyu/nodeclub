@@ -57,8 +57,8 @@ if (config.mini_assets) {
   }
 }
 
-var urlinfo = require('url').parse(config.host);
-config.hostname = urlinfo.hostname || config.host;
+// var urlinfo = require('url').parse(config.host);
+// config.hostname = urlinfo.hostname || config.host;
 
 var app = express();
 
@@ -87,8 +87,8 @@ app.use('/agent', proxyMiddleware.proxy);
 // 通用的中间件
 app.use(require('response-time')());
 app.use(helmet.frameguard('sameorigin'));
-app.use(bodyParser.json({limit: '1mb'}));
-app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
+app.use(bodyParser.json({limit: '10mb'}));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(require('method-override')());
 app.use(require('cookie-parser')(config.session_secret));
 app.use(compress());
@@ -100,21 +100,21 @@ app.use(session({
     db: config.redis_db,
     pass: config.redis_password,
   }),
-  resave: false,
+  resave: true,
   saveUninitialized: false,
 }));
 
-// oauth 中间件
-app.use(passport.initialize());
+// // oauth 中间件
+// app.use(passport.initialize());
 
-// github oauth
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
-passport.deserializeUser(function (user, done) {
-  done(null, user);
-});
-passport.use(new GitHubStrategy(config.GITHUB_OAUTH, githubStrategyMiddleware));
+// // github oauth
+// passport.serializeUser(function (user, done) {
+//   done(null, user);
+// });
+// passport.deserializeUser(function (user, done) {
+//   done(null, user);
+// });
+// passport.use(new GitHubStrategy(config.GITHUB_OAUTH, githubStrategyMiddleware));
 
 // custom middleware
 app.use(auth.authUser);
@@ -172,9 +172,9 @@ if (config.debug) {
 
 if (!module.parent) {
   app.listen(config.port, function () {
-    logger.info('NodeClub listening on port', config.port);
+    logger.info('NSBBS listening on port', config.port);
     logger.info('God bless love....');
-    logger.info('You can debug your app with http://' + config.hostname + ':' + config.port);
+    logger.info('You can debug your app with http://localhost' + ':' + config.port);
     logger.info('');
   });
 }
